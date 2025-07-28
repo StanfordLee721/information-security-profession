@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 27001 導入專案 WBS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(50px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 25px;
+            padding: 8px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            padding: 8px;
+            font-size: 14px;
+            width: 250px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .content {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .wbs-tree {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .wbs-level-1 {
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            background: linear-gradient(90deg, rgba(52, 152, 219, 0.1), transparent);
+            border-radius: 0 10px 10px 0;
+        }
+
+        .wbs-level-2 {
+            margin: 15px 0;
+            padding-left: 20px;
+            border-left: 3px solid #2ecc71;
+            background: linear-gradient(90deg, rgba(46, 204, 113, 0.08), transparent);
+        }
+
+        .wbs-level-3 {
+            margin: 10px 0;
+            padding-left: 20px;
+            border-left: 2px solid #f39c12;
+            background: linear-gradient(90deg, rgba(243, 156, 18, 0.06), transparent);
+        }
+
+        .wbs-level-4 {
+            margin: 8px 0;
+            padding-left: 20px;
+            color: #666;
+            border-left: 1px solid #95a5a6;
+        }
+
+        .wbs-item {
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .wbs-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateX(5px);
+        }
+
+        .wbs-code {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-right: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .wbs-title {
+            font-weight: 500;
+        }
+
+        .wbs-level-1 .wbs-code {
+            color: #3498db;
+            font-size: 1.1em;
+        }
+
+        .wbs-level-2 .wbs-code {
+            color: #2ecc71;
+        }
+
+        .wbs-level-3 .wbs-code {
+            color: #f39c12;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+            color: #666;
+        }
+
+        .collapse-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .stats {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            z-index: 1000;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .stats-label {
+            color: #666;
+        }
+
+        .stats-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .highlight {
+            background: rgba(255, 235, 59, 0.3) !important;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .timeline-view {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .timeline-week {
+            font-weight: bold;
+            color: #3498db;
+            min-width: 80px;
+            margin-right: 20px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box input {
+                width: 200px;
+            }
+
+            .stats {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 20px auto;
+                max-width: 100%;
+            }
+
+            .content {
+                padding: 20px;
+                padding-right: 20px; /* 手機版使用正常padding */
+                max-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ISO 27001 導入專案</h1>
+            <p class="subtitle">Work Breakdown Structure (WBS) | 專案期程：16週</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜尋 WBS 項目...">
+                <span>🔍</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="expandAll()">展開全部</button>
+                <button class="btn btn-secondary" onclick="collapseAll()">收合全部</button>
+                <button class="btn btn-success" onclick="toggleTimeline()">時程檢視</button>
+                <button class="btn btn-primary" onclick="exportData()">匯出資料</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="wbsTree" class="wbs-tree">
+                <!-- WBS 內容會由 JavaScript 動態生成 -->
+            </div>
+
+            <div id="timelineView" class="timeline-view">
+                <h3>專案時程檢視</h3>
+                <div id="timelineContent">
+                    <!-- 時程內容會由 JavaScript 動態生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stats-item">
+            <span class="stats-label">總工作項目:</span>
+            <span class="stats-value" id="totalItems">-</span>
+        </div>
+        <div class="stats-item">
+            <span class="stats-label">主要階段:</span>
+            <span class="stats-value" id="mainPhases">-</span>
+        </div>
+        <div class="stats-item">
+            <span class="stats-label">工作包數:</span>
+            <span class="stats-value" id="workPackages">-</span>
+        </div>
+        <div class="stats-item">
+            <span class="stats-label">完成進度:</span>
+            <span class="stats-value" id="progress">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 25%"></div>
+        </div>
+    </div>
+
+    <script>
+        // 專案開始日期設定
+        const projectStartDate = new Date('2024-08-01');
+        
+        // 計算日期的輔助函數  
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('zh-TW', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
+        }
+        
+        function getWeekDates(weekRange) {
+            const weekNum = weekRange.match(/Week (\d+)(?:-(\d+))?/);
+            if (!weekNum) return { start: '', end: '', duration: 0 };
+            
+            const startWeek = parseInt(weekNum[1]);
+            const endWeek = weekNum[2] ? parseInt(weekNum[2]) : startWeek;
+            
+            const startDate = addDays(projectStartDate, (startWeek - 1) * 7);
+            const endDate = addDays(projectStartDate, endWeek * 7 - 1);
+            const duration = (endWeek - startWeek + 1) * 7;
+            
+            return {
+                start: formatDate(startDate),
+                end: formatDate(endDate),
+                duration: duration
+            };
+        }
+
+        // WBS 資料結構
+        const wbsData = {
+            "1.0": {
+                title: "專案啟動與規劃",
+                weeks: "Week 1-2",
+                duration: "2週 (14天)",
+                children: {
+                    "1.1": {
+                        title: "專案管理建立",
+                        duration: "3天",
+                        children: {
+                            "1.1.1": {
+                                title: "專案章程制定",
+                                duration: "0.5天",
+                                children: {
+                                    "1.1.1.1": { title: "專案目標定義", duration: "2小時" },
+                                    "1.1.1.2": { title: "成功標準設定", duration: "1小時" },
+                                    "1.1.1.3": { title: "專案範圍界定", duration: "2小時" },
+                                    "1.1.1.4": { title: "利害關係人識別", duration: "1小時" }
+                                }
+                            },
+                            "1.1.2": {
+                                title: "專案計畫制定",
+                                duration: "1天",
+                                children: {
+                                    "1.1.2.1": { title: "WBS詳細分解", duration: "3小時" },
+                                    "1.1.2.2": { title: "時程規劃", duration: "2小時" },
+                                    "1.1.2.3": { title: "資源配置計畫", duration: "2小時" },
+                                    "1.1.2.4": { title: "預算編列", duration: "1小時" }
+                                }
+                            }
+                        }
+                    },
+                    "1.2": {
+                        title: "組織準備",
+                        duration: "4天",
+                        children: {
+                            "1.2.1": {
+                                title: "ISMS推動組織建立",
+                                duration: "1天",
+                                children: {
+                                    "1.2.1.1": { title: "推動小組成立", duration: "3小時" },
+                                    "1.2.1.2": { title: "角色職責定義", duration: "3小時" },
+                                    "1.2.1.3": { title: "決策機制建立", duration: "2小時" }
+                                }
+                            },
+                            "1.2.2": {
+                                title: "人員指派與培訓",
+                                duration: "2天",
+                                children: {
+                                    "1.2.2.1": { title: "專案經理指派", duration: "2小時" },
+                                    "1.2.2.2": { title: "技術負責人指派", duration: "2小時" },
+                                    "1.2.2.3": { title: "核心團隊組建", duration: "4小時" }
+                                }
+                            }
+                        }
+                    },
+                    "1.3": {
+                        title: "ISMS範疇定義",
+                        duration: "3天",
+                        children: {
+                            "1.3.1": {
+                                title: "組織脈絡分析",
+                                duration: "1天",
+                                children: {
+                                    "1.3.1.1": { title: "內外部議題識別", duration: "3小時" },
+                                    "1.3.1.2": { title: "利害關係人需求分析", duration: "3小時" }
+                                }
+                            },
+                            "1.3.2": {
+                                title: "範疇邊界劃定",
+                                duration: "1天",
+                                children: {
+                                    "1.3.2.1": { title: "組織邊界定義", duration: "2小時" },
+                                    "1.3.2.2": { title: "實體邊界定義", duration: "2小時" },
+                                    "1.3.2.3": { title: "技術邊界定義", duration: "2小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "2.0": {
+                title: "現況評估與分析",
+                weeks: "Week 3-4",
+                duration: "2週 (14天)",
+                children: {
+                    "2.1": {
+                        title: "資訊資產盤點",
+                        duration: "5天",
+                        children: {
+                            "2.1.1": {
+                                title: "資產清冊建立",
+                                duration: "2天",
+                                children: {
+                                    "2.1.1.1": { title: "硬體資產盤點", duration: "4小時" },
+                                    "2.1.1.2": { title: "軟體資產盤點", duration: "4小時" },
+                                    "2.1.1.3": { title: "資訊資產盤點", duration: "4小時" }
+                                }
+                            },
+                            "2.1.2": {
+                                title: "資產分類分級",
+                                duration: "2天",
+                                children: {
+                                    "2.1.2.1": { title: "資產分類標準制定", duration: "4小時" },
+                                    "2.1.2.2": { title: "資產重要性評估", duration: "4小時" }
+                                }
+                            }
+                        }
+                    },
+                    "2.2": {
+                        title: "現行控制措施評估",
+                        duration: "6天",
+                        children: {
+                            "2.2.1": {
+                                title: "技術控制措施檢視",
+                                duration: "2天",
+                                children: {
+                                    "2.2.1.1": { title: "網路安全控制", duration: "4小時" },
+                                    "2.2.1.2": { title: "系統安全控制", duration: "4小時" }
+                                }
+                            },
+                            "2.2.2": {
+                                title: "管理控制措施檢視",
+                                duration: "2天",
+                                children: {
+                                    "2.2.2.1": { title: "政策制度檢視", duration: "6小時" },
+                                    "2.2.2.2": { title: "程序文件檢視", duration: "6小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "3.0": {
+                title: "風險評估與處理",
+                weeks: "Week 5-6",
+                duration: "2週 (14天)",
+                children: {
+                    "3.1": {
+                        title: "風險評估準備",
+                        duration: "2天",
+                        children: {
+                            "3.1.1": {
+                                title: "風險評估方法選定",
+                                duration: "1天",
+                                children: {
+                                    "3.1.1.1": { title: "評估方法研析", duration: "3小時" },
+                                    "3.1.1.2": { title: "評估工具選擇", duration: "3小時" }
+                                }
+                            }
+                        }
+                    },
+                    "3.2": {
+                        title: "風險識別與分析",
+                        duration: "6天",
+                        children: {
+                            "3.2.1": {
+                                title: "威脅識別",
+                                duration: "2天",
+                                children: {
+                                    "3.2.1.1": { title: "內部威脅分析", duration: "6小時" },
+                                    "3.2.1.2": { title: "外部威脅分析", duration: "6小時" }
+                                }
+                            },
+                            "3.2.2": {
+                                title: "弱點識別",
+                                duration: "2天",
+                                children: {
+                                    "3.2.2.1": { title: "技術弱點掃描", duration: "8小時" },
+                                    "3.2.2.2": { title: "管理弱點分析", duration: "8小時" }
+                                }
+                            }
+                        }
+                    },
+                    "3.3": {
+                        title: "適用性聲明書制定",
+                        duration: "4天",
+                        children: {
+                            "3.3.1": {
+                                title: "控制措施選擇",
+                                duration: "2天",
+                                children: {
+                                    "3.3.1.1": { title: "ISO 27001附錄A分析", duration: "8小時" },
+                                    "3.3.1.2": { title: "適用控制措施選定", duration: "8小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "4.0": {
+                title: "控制措施規劃與設計",
+                weeks: "Week 7-8",
+                duration: "2週 (14天)",
+                children: {
+                    "4.1": {
+                        title: "資訊安全政策制定",
+                        duration: "5天",
+                        children: {
+                            "4.1.1": {
+                                title: "核心政策制定",
+                                duration: "3天",
+                                children: {
+                                    "4.1.1.1": { title: "資訊安全政策", duration: "8小時" },
+                                    "4.1.1.2": { title: "存取控制政策", duration: "8小時" }
+                                }
+                            }
+                        }
+                    },
+                    "4.2": {
+                        title: "技術控制措施設計",
+                        duration: "7天",
+                        children: {
+                            "4.2.1": {
+                                title: "存取控制設計",
+                                duration: "3天",
+                                children: {
+                                    "4.2.1.1": { title: "身分認證機制", duration: "8小時" },
+                                    "4.2.1.2": { title: "授權管理機制", duration: "8小時" }
+                                }
+                            },
+                            "4.2.2": {
+                                title: "網路安全設計",
+                                duration: "2天",
+                                children: {
+                                    "4.2.2.1": { title: "網路分段設計", duration: "8小時" },
+                                    "4.2.2.2": { title: "防火牆政策設計", duration: "8小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "5.0": {
+                title: "實施與部署",
+                weeks: "Week 9-12",
+                duration: "4週 (28天)",
+                children: {
+                    "5.1": {
+                        title: "技術控制措施實施",
+                        duration: "14天",
+                        children: {
+                            "5.1.1": {
+                                title: "網路安全強化",
+                                duration: "5天",
+                                children: {
+                                    "5.1.1.1": { title: "防火牆規則優化", duration: "2天" },
+                                    "5.1.1.2": { title: "入侵偵測系統部署", duration: "2天" }
+                                }
+                            },
+                            "5.1.2": {
+                                title: "系統安全強化",
+                                duration: "5天",
+                                children: {
+                                    "5.1.2.1": { title: "系統強化設定", duration: "2天" },
+                                    "5.1.2.2": { title: "防毒軟體部署", duration: "1天" }
+                                }
+                            }
+                        }
+                    },
+                    "5.2": {
+                        title: "管理控制措施實施",
+                        duration: "8天",
+                        children: {
+                            "5.2.1": {
+                                title: "政策程序發布",
+                                duration: "3天",
+                                children: {
+                                    "5.2.1.1": { title: "政策正式發布", duration: "1天" },
+                                    "5.2.1.2": { title: "程序操作手冊", duration: "2天" }
+                                }
+                            },
+                            "5.2.2": {
+                                title: "教育訓練執行",
+                                duration: "3天",
+                                children: {
+                                    "5.2.2.1": { title: "高階主管訓練", duration: "0.5天" },
+                                    "5.2.2.2": { title: "一般員工訓練", duration: "1.5天" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "6.0": {
+                title: "監控與量測",
+                weeks: "Week 13-14",
+                duration: "2週 (14天)",
+                children: {
+                    "6.1": {
+                        title: "監控機制建立",
+                        duration: "8天",
+                        children: {
+                            "6.1.1": {
+                                title: "技術監控機制",
+                                duration: "5天",
+                                children: {
+                                    "6.1.1.1": { title: "SIEM系統部署", duration: "2天" },
+                                    "6.1.1.2": { title: "安全事件監控", duration: "2天" }
+                                }
+                            }
+                        }
+                    },
+                    "6.2": {
+                        title: "試運行與測試",
+                        duration: "6天",
+                        children: {
+                            "6.2.1": {
+                                title: "控制措施測試",
+                                duration: "3天",
+                                children: {
+                                    "6.2.1.1": { title: "技術控制測試", duration: "1天" },
+                                    "6.2.1.2": { title: "管理控制測試", duration: "1天" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "7.0": {
+                title: "內部稽核",
+                weeks: "Week 15",
+                duration: "1週 (7天)",
+                children: {
+                    "7.1": {
+                        title: "內稽準備",
+                        duration: "2天",
+                        children: {
+                            "7.1.1": {
+                                title: "稽核計畫制定",
+                                duration: "1天",
+                                children: {
+                                    "7.1.1.1": { title: "稽核範圍定義", duration: "4小時" },
+                                    "7.1.1.2": { title: "稽核時程安排", duration: "4小時" }
+                                }
+                            }
+                        }
+                    },
+                    "7.2": {
+                        title: "內稽執行",
+                        duration: "3天",
+                        children: {
+                            "7.2.1": {
+                                title: "文件審查",
+                                duration: "1天",
+                                children: {
+                                    "7.2.1.1": { title: "政策文件審查", duration: "4小時" },
+                                    "7.2.1.2": { title: "程序文件審查", duration: "4小時" }
+                                }
+                            }
+                        }
+                    },
+                    "7.3": {
+                        title: "內稽報告",
+                        duration: "2天",
+                        children: {
+                            "7.3.1": {
+                                title: "稽核報告撰寫",
+                                duration: "1天",
+                                children: {
+                                    "7.3.1.1": { title: "發現事項整理", duration: "4小時" },
+                                    "7.3.1.2": { title: "報告書撰寫", duration: "4小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "8.0": {
+                title: "管理審查與驗證準備",
+                weeks: "Week 16",
+                duration: "1週 (7天)",
+                children: {
+                    "8.1": {
+                        title: "管理審查執行",
+                        duration: "3天",
+                        children: {
+                            "8.1.1": {
+                                title: "管審資料準備",
+                                duration: "2天",
+                                children: {
+                                    "8.1.1.1": { title: "績效報告彙整", duration: "4小時" },
+                                    "8.1.1.2": { title: "改善建議整理", duration: "4小時" }
+                                }
+                            }
+                        }
+                    },
+                    "8.2": {
+                        title: "第三方驗證準備",
+                        duration: "4天",
+                        children: {
+                            "8.2.1": {
+                                title: "驗證文件準備",
+                                duration: "2天",
+                                children: {
+                                    "8.2.1.1": { title: "文件完整性檢查", duration: "8小時" },
+                                    "8.2.1.2": { title: "證據資料整理", duration: "8小時" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // 展開/收合功能
+        function toggleCollapse(btn) {
+            const isCollapsed = btn.classList.contains('collapsed');
+            const parentItem = btn.closest('.wbs-level-1, .wbs-level-2, .wbs-level-3');
+            const childContainer = parentItem.querySelector('.wbs-children');
+            
+            if (childContainer) {
+                if (isCollapsed) {
+                    btn.classList.remove('collapsed');
+                    btn.textContent = '▼';
+                    childContainer.style.display = 'block';
+                } else {
+                    btn.classList.add('collapsed');
+                    btn.textContent = '▶';
+                    childContainer.style.display = 'none';
+                }
+            }
+        }
+
+        // 展開全部
+        function expandAll() {
+            const buttons = document.querySelectorAll('.collapse-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('collapsed');
+                btn.textContent = '▼';
+                const parentItem = btn.closest('.wbs-level-1, .wbs-level-2, .wbs-level-3');
+                const childContainer = parentItem ? parentItem.querySelector('.wbs-children') : null;
+                if (childContainer) {
+                    childContainer.style.display = 'block';
+                }
+            });
+        }
+
+        // 收合全部
+        function collapseAll() {
+            const buttons = document.querySelectorAll('.collapse-btn');
+            buttons.forEach(btn => {
+                btn.classList.add('collapsed');
+                btn.textContent = '▶';
+                const parentItem = btn.closest('.wbs-level-1, .wbs-level-2, .wbs-level-3');
+                const childContainer = parentItem ? parentItem.querySelector('.wbs-children') : null;
+                if (childContainer) {
+                    childContainer.style.display = 'none';
+                }
+            });
+        }
+
+        // 時程檢視切換
+        function toggleTimeline() {
+            const wbsTree = document.getElementById('wbsTree');
+            const timelineView = document.getElementById('timelineView');
+            
+            if (timelineView.style.display === 'none' || timelineView.style.display === '') {
+                wbsTree.style.display = 'none';
+                timelineView.style.display = 'block';
+                renderTimeline();
+            } else {
+                wbsTree.style.display = 'block';
+                timelineView.style.display = 'none';
+            }
+        }
+
+        // 匯出資料功能
+        function exportData() {
+            let exportText = 'ISO 27001 導入專案 WBS\n';
+            exportText += '='.repeat(50) + '\n';
+            exportText += '專案期間：' + formatDate(projectStartDate) + ' ~ ' + formatDate(addDays(projectStartDate, 112)) + '\n';
+            exportText += '總工期：112天 (16週)\n\n';
+            
+            function exportLevel(data, level) {
+                level = level || 0;
+                const indent = '  '.repeat(level);
+                Object.keys(data).forEach(key => {
+                    const item = data[key];
+                    if (typeof item === 'object' && item.title) {
+                        let line = indent + key + ' ' + item.title;
+                        if (item.duration) {
+                            line += ' [' + item.duration + ']';
+                        }
+                        if (item.weeks) {
+                            const dateInfo = getWeekDates(item.weeks);
+                            line += ' (' + dateInfo.start + ' ~ ' + dateInfo.end + ')';
+                        }
+                        exportText += line + '\n';
+                        if (item.children) {
+                            exportLevel(item.children, level + 1);
+                        }
+                    }
+                });
+            }
+            
+            exportLevel(wbsData);
+            
+            // 創建下載連結
+            const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ISO27001_WBS_' + new Date().toISOString().slice(0,10) + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 創建 WBS 元素
+        function createWBSElement(code, item, level) {
+            const div = document.createElement('div');
+            div.className = 'wbs-level-' + level;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'wbs-item';
+            itemDiv.dataset.code = code;
+            
+            let html = '';
+            
+            // 如果有子項目，添加展開/收合按鈕
+            if (item.children) {
+                html += '<button class="collapse-btn" onclick="toggleCollapse(this)">▼</button>';
+            }
+            
+            html += '<span class="wbs-code">' + code + '</span>';
+            html += '<span class="wbs-title">' + item.title + '</span>';
+            
+            // 添加時程和日期資訊
+            if (item.weeks) {
+                const dateInfo = getWeekDates(item.weeks);
+                html += ' <span style="color: #666; font-size: 0.85em; margin-left: 10px;">(' + item.weeks + ' | ' + item.duration + ' | ' + dateInfo.start + ' ~ ' + dateInfo.end + ')</span>';
+            } else if (item.duration) {
+                html += ' <span style="color: #888; font-size: 0.8em; margin-left: 10px;">[' + item.duration + ']</span>';
+            }
+            
+            itemDiv.innerHTML = html;
+            div.appendChild(itemDiv);
+            
+            // 添加子項目
+            if (item.children) {
+                const childContainer = document.createElement('div');
+                childContainer.className = 'wbs-children';
+                
+                Object.keys(item.children).forEach(childKey => {
+                    const childItem = item.children[childKey];
+                    let childElement;
+                    
+                    if (typeof childItem === 'object' && childItem.title) {
+                        // 有 title 屬性的物件
+                        childElement = createWBSElement(childKey, childItem, level + 1);
+                    }
+                    
+                    if (childElement) {
+                        childContainer.appendChild(childElement);
+                    }
+                });
+                
+                div.appendChild(childContainer);
+            }
+            
+            return div;
+        }
+
+        // 渲染 WBS 樹狀結構
+        function renderWBS() {
+            const container = document.getElementById('wbsTree');
+            container.innerHTML = '';
+            
+            Object.keys(wbsData).forEach(key => {
+                const item = wbsData[key];
+                const element = createWBSElement(key, item, 1);
+                container.appendChild(element);
+            });
+        }
+
+        // 渲染時程檢視
+        function renderTimeline() {
+            const container = document.getElementById('timelineContent');
+            
+            const timelineData = [
+                { 
+                    week: "Week 1-2", 
+                    phase: "專案啟動與規劃", 
+                    duration: "14天",
+                    startDate: "2024/08/01",
+                    endDate: "2024/08/14",
+                    tasks: ["專案章程制定 (0.5天)", "ISMS推動組織建立 (1天)", "範疇邊界劃定 (1天)"],
+                    totalDays: 10
+                },
+                { 
+                    week: "Week 3-4", 
+                    phase: "現況評估與分析", 
+                    duration: "14天",
+                    startDate: "2024/08/15",
+                    endDate: "2024/08/28",
+                    tasks: ["資訊資產盤點 (5天)", "現行控制措施評估 (6天)", "法規遵循評估 (3天)"],
+                    totalDays: 14
+                },
+                { 
+                    week: "Week 5-6", 
+                    phase: "風險評估與處理", 
+                    duration: "14天",
+                    startDate: "2024/08/29",
+                    endDate: "2024/09/11",
+                    tasks: ["風險評估準備 (2天)", "風險識別與分析 (6天)", "適用性聲明書制定 (4天)"],
+                    totalDays: 12
+                },
+                { 
+                    week: "Week 7-8", 
+                    phase: "控制措施規劃與設計", 
+                    duration: "14天",
+                    startDate: "2024/09/12",
+                    endDate: "2024/09/25",
+                    tasks: ["資訊安全政策制定 (5天)", "技術控制措施設計 (7天)", "管理程序建立 (2天)"],
+                    totalDays: 12
+                },
+                { 
+                    week: "Week 9-12", 
+                    phase: "實施與部署", 
+                    duration: "28天",
+                    startDate: "2024/09/26",
+                    endDate: "2024/10/23",
+                    tasks: ["技術控制措施實施 (14天)", "管理控制措施實施 (8天)", "實體控制措施實施 (6天)"],
+                    totalDays: 28
+                },
+                { 
+                    week: "Week 13-14", 
+                    phase: "監控與量測", 
+                    duration: "14天",
+                    startDate: "2024/10/24",
+                    endDate: "2024/11/06",
+                    tasks: ["監控機制建立 (8天)", "試運行與測試 (6天)", "KPI指標建立 (並行)"],
+                    totalDays: 14
+                },
+                { 
+                    week: "Week 15", 
+                    phase: "內部稽核", 
+                    duration: "7天",
+                    startDate: "2024/11/07",
+                    endDate: "2024/11/13",
+                    tasks: ["內稽準備 (2天)", "內稽執行 (3天)", "內稽報告 (2天)"],
+                    totalDays: 7
+                },
+                { 
+                    week: "Week 16", 
+                    phase: "管理審查與驗證準備", 
+                    duration: "7天",
+                    startDate: "2024/11/14",
+                    endDate: "2024/11/20",
+                    tasks: ["管理審查執行 (3天)", "第三方驗證準備 (4天)", "文件最終檢查 (並行)"],
+                    totalDays: 7
+                }
+            ];
+            
+            container.innerHTML = '<div style="margin-bottom: 20px;"><h4>專案總覽</h4><div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;"><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"><div><strong>專案開始：</strong>' + formatDate(projectStartDate) + '</div><div><strong>預計完成：</strong>' + formatDate(addDays(projectStartDate, 112)) + '</div><div><strong>總工期：</strong>112天 (16週)</div><div><strong>工作天：</strong>約80天</div></div></div></div>';
+            
+            timelineData.forEach(item => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                
+                const progressWidth = Math.min((item.totalDays / 28) * 100, 100);
+                
+                timelineItem.innerHTML = '<div class="timeline-week">' + item.week + '</div><div class="timeline-content"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;"><h4 style="margin: 0; color: #2c3e50;">' + item.phase + '</h4><span style="color: #666; font-size: 0.9em; font-weight: bold;">' + item.duration + '</span></div><div style="font-size: 0.85em; color: #666; margin-bottom: 10px;">📅 ' + item.startDate + ' ~ ' + item.endDate + ' | ⏱️ ' + item.totalDays + '天</div><ul style="margin: 10px 0; padding-left: 20px;">' + item.tasks.map(task => '<li style="margin-bottom: 5px;">' + task + '</li>').join('') + '</ul><div style="background: #ecf0f1; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px;"><div style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: ' + progressWidth + '%; border-radius: 4px; transition: width 0.3s ease;"></div></div></div>';
+                
+                container.appendChild(timelineItem);
+            });
+        }
+
+        // 更新統計資訊
+        function updateStats() {
+            let totalItems = 0;
+            let mainPhases = 0;
+            let workPackages = 0;
+            
+            function countItems(data, level) {
+                level = level || 1;
+                Object.keys(data).forEach(key => {
+                    const item = data[key];
+                    totalItems++;
+                    
+                    if (level === 1) {
+                        mainPhases++;
+                    } else if (level === 2) {
+                        workPackages++;
+                    }
+                    
+                    if (item.children) {
+                        countItems(item.children, level + 1);
+                    }
+                });
+            }
+            
+            countItems(wbsData);
+            
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('mainPhases').textContent = mainPhases;
+            document.getElementById('workPackages').textContent = workPackages;
+        }
+
+        // 搜尋功能
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                searchWBS(searchTerm);
+            });
+        }
+
+        function searchWBS(searchTerm) {
+            const allItems = document.querySelectorAll('.wbs-item');
+            allItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (searchTerm === '' || text.includes(searchTerm)) {
+                    item.classList.remove('highlight');
+                    if (searchTerm !== '' && text.includes(searchTerm)) {
+                        item.classList.add('highlight');
+                    }
+                    item.style.display = 'block';
+                } else {
+                    item.classList.remove('highlight');
+                }
+            });
+        }
+
+        // 更新專案日期資訊
+        function updateProjectDates() {
+            const projectEndDate = addDays(projectStartDate, 16 * 7 - 1);
+            document.querySelector('.subtitle').innerHTML = 'Work Breakdown Structure (WBS) | 專案期程：16週<br><small style="font-size: 0.9em; opacity: 0.8;">專案期間：' + formatDate(projectStartDate) + ' ~ ' + formatDate(projectEndDate) + ' | 總工期：112天</small>';
+        }
+
+        // 初始化頁面
+        function initializePage() {
+            renderWBS();
+            updateStats();
+            setupEventListeners();
+            updateProjectDates();
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
